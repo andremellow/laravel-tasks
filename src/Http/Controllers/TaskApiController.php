@@ -12,6 +12,7 @@ use Andremellow\Tasks\Enums\TaskStatus;
 use Andremellow\Tasks\Http\Resources\TaskResource;
 use Andremellow\Tasks\Models\Task;
 use Andremellow\Tasks\Services\TaskUsers;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
@@ -27,9 +28,11 @@ class TaskApiController
         return TaskResource::collection($tasks);
     }
 
-    public function store(Request $request, CreateTask $action): TaskResource
+    public function store(Request $request, CreateTask $action): JsonResponse
     {
-        return new TaskResource($action->handle($request->user(), $request->all()));
+        return (new TaskResource($action->handle($request->user(), $request->all())))
+            ->response()
+            ->setStatusCode(201);
     }
 
     public function show(Task $task): TaskResource
