@@ -4,6 +4,20 @@ use Andremellow\Tasks\Http\Middleware\EnsureTasksAccess;
 
 return [
     'user_model' => null,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Access authorization
+    |--------------------------------------------------------------------------
+    |
+    | The consuming application must define this Gate. For example:
+    |
+    | Gate::define('tasks.access', fn ($user): bool => true);
+    |
+    | Replace `true` with the host application's permission check. Requests
+    | fail closed with a configuration error when this Gate is not defined.
+    |
+    */
     'ability' => 'tasks.access',
     'access_middleware' => EnsureTasksAccess::class,
     'layout' => 'tasks::layouts.standalone',
