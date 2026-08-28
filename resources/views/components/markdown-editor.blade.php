@@ -1,6 +1,55 @@
 @props(['model', 'value' => '', 'label' => __('Description'), 'rows' => 12])
 
 @once
+    <style>
+        .tasks-markdown-editor__toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: .375rem;
+            border-bottom: 1px solid #e6e9e3;
+            background: #f8faf6;
+            padding: .5rem;
+        }
+
+        .tasks-markdown-editor .markdown-tool {
+            display: inline-grid;
+            min-width: 2.25rem;
+            height: 2.25rem;
+            place-items: center;
+            border: 1px solid #dfe4db;
+            border-radius: .625rem;
+            background: #fff;
+            padding: 0 .625rem;
+            color: #475046;
+            font-family: ui-sans-serif, system-ui, sans-serif;
+            font-size: .8125rem;
+            line-height: 1;
+            box-shadow: 0 1px 2px rgb(32 36 32 / .06);
+            cursor: pointer;
+            transition: background-color .15s, border-color .15s, color .15s, transform .15s;
+        }
+
+        .tasks-markdown-editor .markdown-tool:hover {
+            border-color: #b9cbb1;
+            background: #eef6e8;
+            color: #315d2b;
+            transform: translateY(-1px);
+        }
+
+        .tasks-markdown-editor .markdown-tool:focus-visible {
+            border-color: #668f55;
+            outline: 2px solid rgb(102 143 85 / .25);
+            outline-offset: 1px;
+        }
+
+        .tasks-markdown-editor .task-rich-editor:empty::before {
+            color: #92988f;
+            content: attr(data-placeholder);
+            pointer-events: none;
+        }
+    </style>
+
     <script>
         (() => {
             const registerTaskMarkdownEditor = () => {
@@ -107,8 +156,8 @@
     </script>
 @endonce
 
-<div class="overflow-hidden rounded-2xl border border-[#dfe3dc] bg-white shadow-sm focus-within:border-[#668f55] focus-within:ring-2 focus-within:ring-[#668f55]/20" x-data="taskMarkdownEditor(@js(str($value)->markdown(['html_input' => 'strip', 'allow_unsafe_links' => false])))">
-    <div class="flex flex-wrap items-center gap-1 border-b border-[#e6e9e3] bg-[#f8faf6] p-2" role="toolbar" aria-label="{{ __('Text formatting') }}">
+<div class="tasks-markdown-editor overflow-hidden rounded-2xl border border-[#dfe3dc] bg-white shadow-sm focus-within:border-[#668f55] focus-within:ring-2 focus-within:ring-[#668f55]/20" x-data="taskMarkdownEditor(@js(str($value)->markdown(['html_input' => 'strip', 'allow_unsafe_links' => false])))">
+    <div class="tasks-markdown-editor__toolbar" role="toolbar" aria-label="{{ __('Text formatting') }}">
         <button type="button" class="markdown-tool" @mousedown.prevent="formatBlock('h2')" aria-label="{{ __('Heading') }}" title="{{ __('Heading') }}">{{ 'H' }}</button>
         <button type="button" class="markdown-tool font-bold" @mousedown.prevent="command('bold')" aria-label="{{ __('Bold') }}" title="{{ __('Bold') }}">{{ 'B' }}</button>
         <button type="button" class="markdown-tool italic" @mousedown.prevent="command('italic')" aria-label="{{ __('Italic') }}" title="{{ __('Italic') }}">{{ 'I' }}</button>
