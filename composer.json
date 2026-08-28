@@ -1,0 +1,30 @@
+{
+    "name": "andremellow/laravel-tasks",
+    "description": "Reusable task management UI and API for Laravel applications.",
+    "type": "library",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.3",
+        "illuminate/contracts": "^13.0",
+        "illuminate/database": "^13.0",
+        "illuminate/http": "^13.0",
+        "illuminate/support": "^13.0",
+        "livewire/livewire": "^4.0",
+        "livewire/flux": "^2.0",
+        "spatie/laravel-medialibrary": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Andremellow\\Tasks\\": "src/",
+            "Andremellow\\Tasks\\Database\\Factories\\": "database/factories/",
+            "Andremellow\\Tasks\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": ["Andremellow\\Tasks\\TasksServiceProvider"]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
