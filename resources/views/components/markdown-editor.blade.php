@@ -2,7 +2,7 @@
 
 <div class="tasks-description-editor">
     <flux:editor
-        wire:model.live.debounce.500ms="{{ $model }}"
+        wire:model="{{ $model }}"
         :label="$label"
         :description="$compact ? __('Format your comment visually.') : __('Format the task description visually. Images, screen recordings, and files are uploaded separately as task media.')"
         toolbar="{{ $compact ? 'bold italic underline strike | bullet ordered blockquote code link | undo redo' : 'heading | bold italic underline strike | bullet ordered blockquote code link | align | undo redo' }}"
