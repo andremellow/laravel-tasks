@@ -13,6 +13,7 @@ class AddTaskComment
     public function handle(Authenticatable $actor, Task $task, string $body): TaskComment
     {
         Gate::forUser($actor)->authorize('comment', $task);
+        $body = trim($body);
 
         $data = Validator::make(
             ['body' => $body],
