@@ -60,6 +60,11 @@ class Task extends Model implements HasMedia
         return $this->hasMany(TaskChange::class);
     }
 
+    public function comments(): HasMany
+    {
+        return $this->hasMany(TaskComment::class);
+    }
+
     public function renderedDescription(): string
     {
         return Str::markdown($this->description ?? '', ['html_input' => 'strip', 'allow_unsafe_links' => false]);

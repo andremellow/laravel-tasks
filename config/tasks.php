@@ -37,6 +37,7 @@ return [
     'user_name_column' => 'name',
     'board' => ['done_limit' => 100],
     'description_max' => 100000,
+    'comment_max' => 5000,
     'attachment_max_kb' => 10240,
     'attachment_mimes' => ['jpg', 'jpeg', 'png', 'webp', 'gif', 'pdf', 'txt', 'md', 'csv', 'doc', 'docx', 'odt', 'xls', 'xlsx', 'ods'],
     'image_max_kb' => 20480,

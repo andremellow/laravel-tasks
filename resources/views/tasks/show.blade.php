@@ -1,5 +1,6 @@
 <?php
 
+use Andremellow\Tasks\Actions\AddTaskComment;
 use Andremellow\Tasks\Actions\AssignTask;
 use Andremellow\Tasks\Actions\DeleteTask;
 use Andremellow\Tasks\Actions\ManageTaskAttachments;
@@ -20,7 +21,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 new class extends Component {
     use WithFileUploads;
-    public Task $task; public string $title = ''; public string $description = ''; public string $priority = ''; public ?int $taskTypeId = null; public ?string $dueDate = null; public ?int $assigneeId = null; public string $status = '';
+    public Task $task; public string $title = ''; public string $description = ''; public string $priority = ''; public ?int $taskTypeId = null; public ?string $dueDate = null; public ?int $assigneeId = null; public string $status = ''; public string $newComment = '';
     /** @var list<int> */ public array $tagIds = []; public array $uploads = []; public bool $mediaUploadOpen = false; public bool $preview = false; public string $assigneeSearch = ''; public bool $panelOpen = true; public bool $embedded = false;
 
     public function mount(Task $task, bool $embedded = false): void { Gate::authorize('view', $task); $this->task = $task; $this->embedded = $embedded; $this->fillState(); }
@@ -30,6 +31,7 @@ new class extends Component {
     #[Computed] public function tags() { return TaskTag::query()->orderBy('name')->get(); }
     #[Computed] public function assignees() { return app(EligibleTaskAssignees::class)->query($this->assigneeSearch)->limit(20)->get(); }
     #[Computed] public function history() { return $this->task->changes()->with('actor')->latest()->limit(100)->get(); }
+    #[Computed] public function comments() { return $this->task->comments()->with('author')->oldest()->get(); }
     #[Computed] public function attachments() { return $this->task->getMedia('task-attachments'); }
     #[Computed] public function images() { return $this->attachments->filter(fn (Media $media) => $this->task->mediaCategory($media) === 'image'); }
     #[Computed] public function videos() { return $this->attachments->filter(fn (Media $media) => $this->task->mediaCategory($media) === 'video'); }
@@ -39,6 +41,7 @@ new class extends Component {
     public function move(MoveTask $move): void { $this->task = $move->handle(auth()->user(), $this->task, TaskStatus::from($this->status), max(1, $this->task->board_position)); $this->fillState(); unset($this->history); $this->dispatch('task-editor-saved'); }
     public function upload(ManageTaskAttachments $manage): void { foreach ($this->uploads as $upload) $manage->add(auth()->user(), $this->task, $upload); $this->uploads = []; $this->mediaUploadOpen = false; unset($this->attachments, $this->images, $this->videos, $this->documents, $this->history); $this->dispatch('task-editor-saved'); }
     public function removeAttachment(int $id, ManageTaskAttachments $manage): void { $manage->remove(auth()->user(), $this->task, Media::findOrFail($id)); unset($this->attachments, $this->images, $this->videos, $this->documents, $this->history); $this->dispatch('task-editor-saved'); }
+    public function addComment(AddTaskComment $add): void { $add->handle(auth()->user(), $this->task, $this->newComment); $this->newComment = ''; unset($this->comments); $this->dispatch('task-editor-saved'); }
     public function delete(DeleteTask $delete): void { $delete->handle(auth()->user(), $this->task); $this->embedded ? $this->dispatch('task-editor-closed') : $this->redirectRoute(config('tasks.web.name').'index', navigate: true); }
     public function updatedPanelOpen(bool $open): void { if (! $open && $this->embedded) $this->dispatch('task-editor-closed'); }
 };

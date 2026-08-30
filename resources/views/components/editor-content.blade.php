@@ -51,7 +51,45 @@
             @endcan
         </section>
         @can('delete', $task)<flux:button variant="danger" wire:click="delete" wire:confirm="{{ __('Delete this task?') }}">{{ __('Delete task') }}</flux:button>@endcan</aside></div>
-    <section class="saas-feature-card p-5"><h2 class="font-bold">{{ __('Change history') }}</h2><ol class="mt-4 space-y-3">@forelse($this->history as $change)<li class="border-l-2 border-[#dce6d2] pl-4 text-sm"><strong>{{ __(str($change->operation)->headline()->toString()) }}</strong><span class="text-[#737a72]"> · {{ $change->actor?->name ?? __('Deleted user') }} · {{ $change->created_at->diffForHumans() }}</span></li>@empty<li class="text-sm text-[#737a72]">{{ __('No changes recorded yet.') }}</li>@endforelse</ol></section>
+    <section class="overflow-hidden rounded-[22px] border border-[#dde3e7] bg-white shadow-[0_12px_32px_rgba(31,38,43,.06)]">
+        <header class="border-b border-[#edf1f3] px-5 py-5 sm:px-6">
+            <p class="text-[11px] font-bold uppercase tracking-[.16em] text-[#1c6b84]">{{ __('Conversation') }}</p>
+            <h2 class="mt-1 text-lg font-bold text-[#1f262b]">{{ __('Comments') }}</h2>
+            <p class="mt-1 text-sm text-[#6b7780]">{{ __('Share progress, decisions, and what still needs attention.') }}</p>
+        </header>
+
+        <div class="max-h-[28rem] space-y-4 overflow-y-auto px-5 py-5 sm:px-6" aria-live="polite">
+            @forelse($this->comments as $comment)
+                <article wire:key="task-comment-{{ $comment->id }}" class="flex items-start gap-3">
+                    <span class="grid size-9 shrink-0 place-items-center rounded-full bg-[#e4f2f7] text-xs font-bold text-[#1c6b84]" aria-hidden="true">{{ str($comment->author?->name ?? '?')->substr(0, 1)->upper() }}</span>
+                    <div class="min-w-0 flex-1 rounded-2xl rounded-tl-md border border-[#e2e8eb] bg-[#f7fafb] px-4 py-3">
+                        <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                            <strong class="text-sm text-[#1f262b]">{{ $comment->author?->name ?? __('Deleted user') }}</strong>
+                            <time datetime="{{ $comment->created_at->toIso8601String() }}" class="text-xs text-[#7b8790]">{{ $comment->created_at->diffForHumans() }}</time>
+                        </div>
+                        <p class="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#3f4a51]">{{ $comment->body }}</p>
+                    </div>
+                </article>
+            @empty
+                <div class="rounded-2xl border border-dashed border-[#cfd9de] bg-[#f8fbfc] px-5 py-8 text-center">
+                    <p class="text-sm font-semibold text-[#44515a]">{{ __('No comments yet.') }}</p>
+                    <p class="mt-1 text-xs text-[#7b8790]">{{ __('Start the conversation with an update or question.') }}</p>
+                </div>
+            @endforelse
+        </div>
+
+        @can('comment', $task)
+            <form wire:submit="addComment" class="border-t border-[#edf1f3] bg-[#fbfcfd] p-5 sm:p-6">
+                <flux:textarea wire:model="newComment" :label="__('Add a comment')" :placeholder="__('Write an update, question, or decision…')" rows="3" required />
+                @error('newComment')<p class="mt-2 text-sm font-semibold text-[#b42318]" role="alert">{{ $message }}</p>@enderror
+                <div class="mt-3 flex justify-end">
+                    <flux:button type="submit" variant="primary" icon="paper-airplane" wire:loading.attr="disabled" wire:target="addComment">{{ __('Comment') }}</flux:button>
+                </div>
+            </form>
+        @endcan
+    </section>
+
+    <section class="saas-feature-card p-5"><h2 class="font-bold">{{ __('Change history') }}</h2><ol class="mt-4 space-y-3">@forelse($this->history as $change)<li class="border-l-2 border-[#cfe2e9] pl-4 text-sm"><strong>{{ __(str($change->operation)->headline()->toString()) }}</strong><span class="text-[#737a72]"> · {{ $change->actor?->name ?? __('Deleted user') }} · {{ $change->created_at->diffForHumans() }}</span></li>@empty<li class="text-sm text-[#737a72]">{{ __('No changes recorded yet.') }}</li>@endforelse</ol></section>
 
     @can('manageAttachments', $task)
         <flux:modal wire:model.self="mediaUploadOpen" class="max-w-xl">

@@ -45,7 +45,7 @@ new class extends Component {
     {
         $this->authorizeCurrentView();
         $query = $this->view === 'deleted' ? Task::onlyTrashed() : Task::query();
-        return $query->with(['type', 'assignee', 'tags'])->withCount('media')
+        return $query->with(['type', 'assignee', 'tags'])->withCount(['media', 'comments'])
             ->when(trim($this->search) !== '', fn ($q) => $q->where(fn ($inner) => $inner->whereLike('title', '%'.trim($this->search).'%', caseSensitive: false)->orWhereLike('description', '%'.trim($this->search).'%', caseSensitive: false)))
             ->when($this->status !== '', fn ($q) => $q->where('status', $this->status))->when($this->priority !== '', fn ($q) => $q->where('priority', $this->priority))
             ->when($this->typeId, fn ($q) => $q->where('task_type_id', $this->typeId))->when($this->assigneeId, fn ($q) => $q->where('assignee_id', $this->assigneeId))
@@ -57,7 +57,7 @@ new class extends Component {
     #[Computed] public function board()
     {
         $statuses = [TaskStatus::ToDo, TaskStatus::InProgress, TaskStatus::InReview, TaskStatus::Done];
-        return collect($statuses)->mapWithKeys(fn ($status) => [$status->value => Task::query()->where('status', $status)->with(['type', 'assignee', 'tags'])->withCount('media')
+        return collect($statuses)->mapWithKeys(fn ($status) => [$status->value => Task::query()->where('status', $status)->with(['type', 'assignee', 'tags'])->withCount(['media', 'comments'])
             ->when($this->boardAssigneeIds !== [] || $this->boardUnassigned, function ($query): void {
                 $query->where(function ($assignees): void {
                     if ($this->boardAssigneeIds !== []) $assignees->whereIn('assignee_id', $this->boardAssigneeIds);
@@ -257,7 +257,59 @@ new class extends Component {
                 </ul>
             </article>
         </section>
-    @else<section class="saas-feature-card grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4"><flux:input wire:model.live.debounce.300ms="search" :label="__('Search tasks')"/><flux:select wire:model.live="status" :label="__('Status')"><option value="">{{ __('All statuses') }}</option>@foreach(TaskStatus::cases() as $value)<option value="{{ $value->value }}">{{ $value->label() }}</option>@endforeach</flux:select><flux:select wire:model.live="priority" :label="__('Priority')"><option value="">{{ __('All priorities') }}</option>@foreach(TaskPriority::cases() as $value)<option value="{{ $value->value }}">{{ $value->label() }}</option>@endforeach</flux:select><flux:checkbox wire:model.live="overdue" :label="__('Overdue only')"/></section><section class="overflow-hidden rounded-[22px] border border-[#e1e4dd] bg-white"><div class="divide-y divide-[#edf0ea]">@forelse($this->tasks as $task)<article class="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between"><div><h2 class="font-bold">{{ $task->title }}</h2><p class="text-xs text-[#737a72]">{{ $task->type->name }} · {{ $task->priority->label() }} · {{ $task->status->label() }}</p></div>@if($view === 'deleted')<flux:button wire:click="restore({{ $task->id }})">{{ __('Restore') }}</flux:button>@else<button type="button" wire:click="openTask({{ $task->id }})" class="text-sm font-semibold text-[#4f7841]">{{ __('Open') }}</button>@endif</article>@empty<div class="p-8 text-center text-sm text-[#737a72]">{{ __('No tasks match these filters.') }}</div>@endforelse</div><div class="p-4">{{ $this->tasks->links() }}</div></section>@endif
+    @else
+        <section class="saas-feature-card grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4">
+            <flux:input wire:model.live.debounce.300ms="search" :label="__('Search tasks')"/>
+            <flux:select wire:model.live="status" :label="__('Status')"><option value="">{{ __('All statuses') }}</option>@foreach(TaskStatus::cases() as $value)<option value="{{ $value->value }}">{{ $value->label() }}</option>@endforeach</flux:select>
+            <flux:select wire:model.live="priority" :label="__('Priority')"><option value="">{{ __('All priorities') }}</option>@foreach(TaskPriority::cases() as $value)<option value="{{ $value->value }}">{{ $value->label() }}</option>@endforeach</flux:select>
+            <flux:checkbox wire:model.live="overdue" :label="__('Overdue only')"/>
+        </section>
+
+        <section class="space-y-3" aria-label="{{ __('Tasks') }}">
+            @forelse($this->tasks as $task)
+                <article wire:key="task-list-{{ $task->id }}" class="group rounded-[20px] border border-[#dde3e7] bg-white p-5 shadow-[0_8px_24px_rgba(31,38,43,.05)] transition duration-200 hover:-translate-y-0.5 hover:border-[#bfd0d7] hover:shadow-[0_14px_32px_rgba(31,38,43,.08)] sm:p-6">
+                    <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="inline-flex rounded-full bg-[#e4f2f7] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.09em] text-[#1c6b84]">{{ $task->type->name }}</span>
+                                <span @class([
+                                    'inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.09em]',
+                                    'bg-[#eef2f4] text-[#61707a]' => $task->priority === TaskPriority::Low,
+                                    'bg-[#fff3d6] text-[#80651b]' => $task->priority === TaskPriority::Medium,
+                                    'bg-[#ffead6] text-[#9a5b21]' => $task->priority === TaskPriority::High,
+                                    'bg-[#fde7e7] text-[#a63737]' => $task->priority === TaskPriority::Urgent,
+                                ])>{{ $task->priority->label() }}</span>
+                                <span class="inline-flex rounded-full border border-[#dce4e8] bg-[#f8fafb] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.09em] text-[#53616a]">{{ $task->status->label() }}</span>
+                            </div>
+
+                            <button type="button" wire:click="openTask({{ $task->id }})" class="mt-3 block max-w-full text-left text-base font-bold leading-6 text-[#1f262b] transition group-hover:text-[#1c6b84]">{{ $task->title }}</button>
+                            @if(filled($task->description))
+                                <p class="mt-1 line-clamp-2 text-sm leading-6 text-[#68747c]">{{ str(strip_tags($task->description))->limit(180) }}</p>
+                            @endif
+
+                            <div class="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-[#76828a]">
+                                <span class="inline-flex items-center gap-1.5"><flux:icon.user class="size-3.5"/>{{ $task->assignee?->name ?? __('Unassigned') }}</span>
+                                @if($task->due_date)<time datetime="{{ $task->due_date->toDateString() }}" class="inline-flex items-center gap-1.5"><flux:icon.calendar-days class="size-3.5"/>{{ $task->due_date->translatedFormat('M j, Y') }}</time>@endif
+                                @if($task->comments_count)<span class="inline-flex items-center gap-1.5"><flux:icon.chat-bubble-left class="size-3.5"/>{{ trans_choice(':count comment|:count comments', $task->comments_count, ['count' => $task->comments_count]) }}</span>@endif
+                                @if($task->media_count)<span class="inline-flex items-center gap-1.5"><flux:icon.paper-clip class="size-3.5"/>{{ $task->media_count }}</span>@endif
+                            </div>
+                        </div>
+
+                        <div class="shrink-0">
+                            @if($view === 'deleted')
+                                <flux:button wire:click="restore({{ $task->id }})">{{ __('Restore') }}</flux:button>
+                            @else
+                                <flux:button type="button" wire:click="openTask({{ $task->id }})" icon-trailing="chevron-right">{{ __('Open task') }}</flux:button>
+                            @endif
+                        </div>
+                    </div>
+                </article>
+            @empty
+                <div class="rounded-[20px] border border-dashed border-[#cad6dc] bg-white px-6 py-12 text-center text-sm text-[#737f87]">{{ __('No tasks match these filters.') }}</div>
+            @endforelse
+        </section>
+        <div>{{ $this->tasks->links() }}</div>
+    @endif
 
     @if($this->editingTask)
         <livewire:tasks::tasks.show :task="$this->editingTask" :embedded="true" :key="'task-editor-'.$this->editingTask->id" />
