@@ -5,6 +5,7 @@ namespace Andremellow\Tasks;
 use Andremellow\Tasks\Enums\Permission;
 use Andremellow\Tasks\Models\Task;
 use Andremellow\Tasks\Policies\TaskPolicy;
+use Andremellow\Tasks\Support\TaskMediaPathGenerator;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Gate;
@@ -20,6 +21,11 @@ class TasksServiceProvider extends ServiceProvider
 
     public function boot(Router $router): void
     {
+        config()->set('media-library.custom_path_generators', array_merge(
+            config('media-library.custom_path_generators', []),
+            [Task::class => TaskMediaPathGenerator::class],
+        ));
+
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'tasks');
         Livewire::addNamespace('tasks', viewPath: __DIR__.'/../resources/views');
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');

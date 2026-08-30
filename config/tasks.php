@@ -39,7 +39,12 @@ return [
     'description_max' => 100000,
     'attachment_max_kb' => 10240,
     'attachment_mimes' => ['jpg', 'jpeg', 'png', 'webp', 'gif', 'pdf', 'txt', 'md', 'csv', 'doc', 'docx', 'odt', 'xls', 'xlsx', 'ods'],
+    'image_max_kb' => 20480,
+    'image_mimes' => ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+    'video_max_kb' => 524288,
+    'video_mimes' => ['mp4', 'mov', 'm4v', 'webm'],
     'media_disk' => null,
+    'media_path' => 'tasks',
     'media_morph_alias' => null,
     'timezone' => 'UTC',
 ];

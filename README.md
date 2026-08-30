@@ -178,7 +178,24 @@ It supports listing, creation, detail, editing, assignment, status/position chan
 
 ## Other configuration
 
-The published `config/tasks.php` also controls the user name column, assignee resolver, completed-task board limit, description and attachment limits, accepted attachment types, media disk, morph alias, and timezone. Defaults work without publishing for optional values; `user_model` and the access Gate are host responsibilities.
+The published `config/tasks.php` also controls the user name column, assignee resolver, completed-task board limit, description and attachment limits, accepted attachment types, media disk, morph alias, and timezone. Task images and videos are private task media; they do not use or expose a shared gallery. Images render as previews and videos use the browser's native player through an authorized package route. Defaults work without publishing for optional values; `user_model` and the access Gate are host responsibilities.
+
+Set both the Laravel filesystem disk and directory prefix used for task media:
+
+```php
+'media_disk' => 'local',
+'media_path' => 'platform/tasks',
+```
+
+Screen recordings default to 512 MB. Because the web UI uses Livewire temporary uploads, the host must set Livewire's temporary upload limit at least as high as `tasks.video_max_kb` and ensure its PHP/web-server request limits allow the same size. For example:
+
+```php
+// config/livewire.php
+'temporary_file_upload' => [
+    'rules' => ['required', 'file', 'max:'.config('tasks.video_max_kb')],
+    'max_upload_time' => 30,
+],
+```
 
 After changing configuration in a cached environment, run:
 
