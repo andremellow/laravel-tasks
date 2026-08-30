@@ -22,7 +22,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 new class extends Component {
     use WithFileUploads;
     public Task $task; public string $title = ''; public string $description = ''; public string $priority = ''; public ?int $taskTypeId = null; public ?string $dueDate = null; public ?int $assigneeId = null; public string $status = ''; public string $newComment = '';
-    /** @var list<int> */ public array $tagIds = []; public array $uploads = []; public bool $mediaUploadOpen = false; public bool $preview = false; public string $assigneeSearch = ''; public bool $panelOpen = true; public bool $embedded = false;
+    /** @var list<int> */ public array $tagIds = []; public array $uploads = []; public bool $mediaUploadOpen = false; public string $assigneeSearch = ''; public bool $panelOpen = true; public bool $embedded = false;
 
     public function mount(Task $task, bool $embedded = false): void { Gate::authorize('view', $task); $this->task = $task; $this->embedded = $embedded; $this->fillState(); }
     public function hydrate(): void { Gate::authorize('view', $this->task->fresh()); }
