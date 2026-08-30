@@ -67,7 +67,7 @@
                             <strong class="text-sm text-[#1f262b]">{{ $comment->author?->name ?? __('Deleted user') }}</strong>
                             <time datetime="{{ $comment->created_at->toIso8601String() }}" class="text-xs text-[#7b8790]">{{ $comment->created_at->diffForHumans() }}</time>
                         </div>
-                        <p class="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#3f4a51]">{{ $comment->body }}</p>
+                        <div class="prose prose-sm mt-2 max-w-none text-[#3f4a51] prose-a:text-[#1c6b84] prose-blockquote:border-[#b7d5df] prose-blockquote:text-[#53616a]">{!! $comment->renderedBody() !!}</div>
                     </div>
                 </article>
             @empty
@@ -80,7 +80,7 @@
 
         @can('comment', $task)
             <form wire:submit="addComment" class="border-t border-[#edf1f3] bg-[#fbfcfd] p-5 sm:p-6">
-                <flux:textarea wire:model="newComment" :label="__('Add a comment')" :placeholder="__('Write an update, question, or decision…')" rows="3" required />
+                <x-tasks::markdown-editor model="newComment" :label="__('Add a comment')" compact />
                 @error('newComment')<p class="mt-2 text-sm font-semibold text-[#b42318]" role="alert">{{ $message }}</p>@enderror
                 <div class="mt-3 flex justify-end">
                     <flux:button type="submit" variant="primary" icon="paper-airplane" wire:loading.attr="disabled" wire:target="addComment">{{ __('Comment') }}</flux:button>
