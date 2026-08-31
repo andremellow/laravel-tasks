@@ -64,7 +64,7 @@
                     <div class="min-w-0 flex-1 rounded-2xl rounded-tl-md bg-[#f4f8fa] px-4 py-3">
                         <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                             <strong class="text-sm text-[#1f262b]">{{ $comment->author?->name ?? __('Deleted user') }}</strong>
-                            <div class="flex items-center gap-2"><time datetime="{{ $comment->created_at->toIso8601String() }}" class="text-xs text-[#7b8790]">{{ $comment->created_at->diffForHumans() }}</time>@can('delete', $comment)<flux:button type="button" variant="ghost" size="sm" icon="trash" wire:click="deleteComment({{ $comment->id }})" wire:confirm="{{ __('Delete this comment?') }}" :aria-label="__('Delete comment')" class="!size-7 !p-0 !text-[#a23c3c]" />@endcan</div>
+                            <div class="flex items-center gap-2"><time datetime="{{ $comment->created_at->toIso8601String() }}" class="text-xs text-[#7b8790]">{{ $comment->created_at->diffForHumans() }}</time>@if((string) $comment->author_id === (string) auth()->id())<flux:button type="button" variant="ghost" size="sm" icon="trash" wire:click="deleteComment({{ $comment->id }})" wire:confirm="{{ __('Delete this comment?') }}" :aria-label="__('Delete comment')" class="!size-7 !p-0 !text-[#a23c3c]" />@endif</div>
                         </div>
                         <div class="prose prose-sm mt-2 max-w-none text-[#3f4a51] prose-a:text-[#1c6b84] prose-blockquote:border-[#b7d5df] prose-blockquote:text-[#53616a]">{!! $comment->renderedBody() !!}</div>
                     </div>

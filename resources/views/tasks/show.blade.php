@@ -11,7 +11,6 @@ use Andremellow\Tasks\Enums\TaskPriority;
 use Andremellow\Tasks\Enums\TaskStatus;
 use Andremellow\Tasks\Models\Task;
 use Andremellow\Tasks\Models\TaskTag;
-use Andremellow\Tasks\Models\TaskComment;
 use Andremellow\Tasks\Models\TaskType;
 use Andremellow\Tasks\Services\EligibleTaskAssignees;
 use Andremellow\Tasks\Services\TaskUsers;
