@@ -5,6 +5,7 @@ namespace Andremellow\Tasks\Models;
 use Andremellow\Tasks\Database\Factories\TaskFactory;
 use Andremellow\Tasks\Enums\TaskPriority;
 use Andremellow\Tasks\Enums\TaskStatus;
+use Andremellow\Tasks\Services\TaskRichTextRenderer;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,7 +15,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -67,7 +67,7 @@ class Task extends Model implements HasMedia
 
     public function renderedDescription(): string
     {
-        return Str::markdown($this->description ?? '', ['html_input' => 'strip', 'allow_unsafe_links' => false]);
+        return app(TaskRichTextRenderer::class)->render($this->description ?? '');
     }
 
     public function mediaCategory(Media $media): string

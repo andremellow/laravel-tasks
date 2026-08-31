@@ -2,14 +2,17 @@
 
 namespace Andremellow\Tasks\Models;
 
+use Andremellow\Tasks\Services\TaskRichTextRenderer;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable(['task_id', 'author_id', 'body'])]
 class TaskComment extends Model
 {
+    use SoftDeletes;
+
     public function task(): BelongsTo
     {
         return $this->belongsTo(Task::class);
@@ -22,9 +25,6 @@ class TaskComment extends Model
 
     public function renderedBody(): string
     {
-        return Str::markdown($this->body, [
-            'html_input' => 'strip',
-            'allow_unsafe_links' => false,
-        ]);
+        return app(TaskRichTextRenderer::class)->render($this->body);
     }
 }

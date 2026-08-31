@@ -3,6 +3,7 @@
 use Andremellow\Tasks\Actions\AddTaskComment;
 use Andremellow\Tasks\Actions\AssignTask;
 use Andremellow\Tasks\Actions\DeleteTask;
+use Andremellow\Tasks\Actions\DeleteTaskComment;
 use Andremellow\Tasks\Actions\ManageTaskAttachments;
 use Andremellow\Tasks\Actions\MoveTask;
 use Andremellow\Tasks\Actions\UpdateTask;
@@ -10,6 +11,7 @@ use Andremellow\Tasks\Enums\TaskPriority;
 use Andremellow\Tasks\Enums\TaskStatus;
 use Andremellow\Tasks\Models\Task;
 use Andremellow\Tasks\Models\TaskTag;
+use Andremellow\Tasks\Models\TaskComment;
 use Andremellow\Tasks\Models\TaskType;
 use Andremellow\Tasks\Services\EligibleTaskAssignees;
 use Andremellow\Tasks\Services\TaskUsers;
@@ -41,7 +43,8 @@ new class extends Component {
     public function move(MoveTask $move): void { $this->task = $move->handle(auth()->user(), $this->task, TaskStatus::from($this->status), max(1, $this->task->board_position)); $this->fillState(); unset($this->history); $this->dispatch('task-editor-saved'); }
     public function upload(ManageTaskAttachments $manage): void { foreach ($this->uploads as $upload) $manage->add(auth()->user(), $this->task, $upload); $this->uploads = []; $this->mediaUploadOpen = false; unset($this->attachments, $this->images, $this->videos, $this->documents, $this->history); $this->dispatch('task-editor-saved'); }
     public function removeAttachment(int $id, ManageTaskAttachments $manage): void { $manage->remove(auth()->user(), $this->task, Media::findOrFail($id)); unset($this->attachments, $this->images, $this->videos, $this->documents, $this->history); $this->dispatch('task-editor-saved'); }
-    public function addComment(AddTaskComment $add): void { $this->newComment = trim($this->newComment); $this->validate(['newComment' => ['required', 'string', 'max:'.config('tasks.comment_max', 5000)]]); $add->handle(auth()->user(), $this->task, $this->newComment); $this->newComment = ''; unset($this->comments); $this->dispatch('task-editor-saved'); }
+    public function addComment(AddTaskComment $add): void { $this->newComment = trim($this->newComment); $this->validate(['newComment' => ['required', 'string', 'max:'.config('tasks.comment_max', 5000)]]); $add->handle(auth()->user(), $this->task, $this->newComment); $this->newComment = ''; unset($this->comments); }
+    public function deleteComment(int $id, DeleteTaskComment $delete): void { $comment = $this->task->comments()->findOrFail($id); $delete->handle(auth()->user(), $comment); unset($this->comments); }
     public function delete(DeleteTask $delete): void { $delete->handle(auth()->user(), $this->task); $this->embedded ? $this->dispatch('task-editor-closed') : $this->redirectRoute(config('tasks.web.name').'index', navigate: true); }
     public function updatedPanelOpen(bool $open): void { if (! $open && $this->embedded) $this->dispatch('task-editor-closed'); }
 };

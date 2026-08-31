@@ -4,6 +4,8 @@ namespace Andremellow\Tasks;
 
 use Andremellow\Tasks\Enums\Permission;
 use Andremellow\Tasks\Models\Task;
+use Andremellow\Tasks\Models\TaskComment;
+use Andremellow\Tasks\Policies\TaskCommentPolicy;
 use Andremellow\Tasks\Policies\TaskPolicy;
 use Andremellow\Tasks\Support\TaskMediaPathGenerator;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -32,6 +34,7 @@ class TasksServiceProvider extends ServiceProvider
         $router->aliasMiddleware('tasks.access', config('tasks.access_middleware'));
 
         Gate::policy(Task::class, TaskPolicy::class);
+        Gate::policy(TaskComment::class, TaskCommentPolicy::class);
         $mediaMorphAlias = config('tasks.media_morph_alias') ?: Task::class;
         Relation::morphMap([$mediaMorphAlias => Task::class], merge: true);
         foreach (Permission::cases() as $permission) {
