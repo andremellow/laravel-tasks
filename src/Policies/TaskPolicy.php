@@ -53,6 +53,11 @@ class TaskPolicy
         return $this->access($user);
     }
 
+    public function comment(Authenticatable $user, Task $task): bool
+    {
+        return $this->access($user);
+    }
+
     private function access(Authenticatable $user): bool
     {
         return Gate::forUser($user)->allows((string) config('tasks.ability', 'tasks.access'));

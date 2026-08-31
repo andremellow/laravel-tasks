@@ -5,6 +5,7 @@ namespace Andremellow\Tasks\Models;
 use Andremellow\Tasks\Database\Factories\TaskFactory;
 use Andremellow\Tasks\Enums\TaskPriority;
 use Andremellow\Tasks\Enums\TaskStatus;
+use Andremellow\Tasks\Services\TaskRichTextRenderer;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,9 +15,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 #[Fillable(['task_type_id', 'created_by', 'assignee_id', 'title', 'description', 'priority', 'status', 'board_position', 'due_date', 'completed_at'])]
 class Task extends Model implements HasMedia
@@ -59,9 +60,29 @@ class Task extends Model implements HasMedia
         return $this->hasMany(TaskChange::class);
     }
 
+    public function comments(): HasMany
+    {
+        return $this->hasMany(TaskComment::class);
+    }
+
     public function renderedDescription(): string
     {
-        return Str::markdown($this->description ?? '', ['html_input' => 'strip', 'allow_unsafe_links' => false]);
+        return app(TaskRichTextRenderer::class)->render($this->description ?? '');
+    }
+
+    public function mediaCategory(Media $media): string
+    {
+        $stored = $media->getCustomProperty('task_media_category');
+
+        if (in_array($stored, ['image', 'video', 'attachment'], true)) {
+            return $stored;
+        }
+
+        return match (true) {
+            str_starts_with((string) $media->mime_type, 'image/') => 'image',
+            str_starts_with((string) $media->mime_type, 'video/') => 'video',
+            default => 'attachment',
+        };
     }
 
     public function scopeOverdue($query, ?Authenticatable $viewer = null)

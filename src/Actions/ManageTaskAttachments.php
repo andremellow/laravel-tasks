@@ -18,11 +18,37 @@ class ManageTaskAttachments
     public function add(Authenticatable $actor, Task $task, UploadedFile $file): Media
     {
         Gate::forUser($actor)->authorize('manageAttachments', $task);
-        Validator::make(['file' => $file], ['file' => ['required', File::types(config('tasks.attachment_mimes'))->max((int) config('tasks.attachment_max_kb', 10240))]])->validate();
-        $media = $task->addMedia($file)->usingName($file->getClientOriginalName())->toMediaCollection('task-attachments');
-        $this->audit->handle($task, $actor, 'attachment_added', [], ['media_id' => $media->id, 'name' => $media->name, 'mime_type' => $media->mime_type, 'size' => $media->size]);
+        $category = $this->category($file);
+        $mimes = config("tasks.{$category}_mimes", config('tasks.attachment_mimes'));
+        $max = (int) config("tasks.{$category}_max_kb", config('tasks.attachment_max_kb', 10240));
+
+        Validator::make(
+            ['file' => $file],
+            ['file' => ['required', File::types($mimes)->max($max)]],
+        )->validate();
+
+        $path = trim((string) config('tasks.media_path', 'tasks'), '/') ?: 'tasks';
+        $media = $task->addMedia($file)
+            ->usingName($file->getClientOriginalName())
+            ->withCustomProperties([
+                'task_media_category' => $category,
+                'task_media_path' => $path,
+            ])
+            ->toMediaCollection('task-attachments');
+        $this->audit->handle($task, $actor, 'attachment_added', [], ['media_id' => $media->id, 'name' => $media->name, 'mime_type' => $media->mime_type, 'size' => $media->size, 'category' => $category]);
 
         return $media;
+    }
+
+    private function category(UploadedFile $file): string
+    {
+        $mime = strtolower((string) $file->getMimeType());
+
+        return match (true) {
+            str_starts_with($mime, 'image/') => 'image',
+            str_starts_with($mime, 'video/') => 'video',
+            default => 'attachment',
+        };
     }
 
     public function remove(Authenticatable $actor, Task $task, Media $media): void
