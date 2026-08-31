@@ -126,20 +126,24 @@ new class extends Component {
             @endif
         </section>
         @if($boardFiltered)<p class="text-xs font-semibold text-[#737a72]">{{ __('Clear assignee filters to reorder tasks.') }}</p>@endif
-        <section class="task-board" aria-label="{{ __('Kanban board') }}">
+        <section
+            class="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
+            aria-label="{{ __('Kanban board') }}"
+            x-data="{ dropPosition(event) { const cards = [...event.currentTarget.querySelectorAll('[data-task-id]')]; const index = cards.findIndex((card) => event.clientY < card.getBoundingClientRect().top + card.getBoundingClientRect().height / 2); return index === -1 ? cards.length + 1 : index + 1 } }"
+        >
             @foreach([TaskStatus::ToDo, TaskStatus::InProgress, TaskStatus::InReview, TaskStatus::Done] as $lane)
                 @php($laneTasks = $this->board[$lane->value])
-                <div class="task-lane" @unless($boardFiltered) x-on:dragover.prevent x-on:drop.prevent="$wire.move(parseInt($event.dataTransfer.getData('text/plain')), '{{ $lane->value }}', window.taskDropPosition($event))" @endunless>
+                <div class="min-w-0 rounded-[22px] border border-[#dde3e7] bg-[#eef3f5] p-4 shadow-[0_12px_30px_-28px_rgba(20,28,34,.45)]" @unless($boardFiltered) x-on:dragover.prevent x-on:drop.prevent="$wire.move(parseInt($event.dataTransfer.getData('text/plain')), '{{ $lane->value }}', dropPosition($event))" @endunless>
                     <header class="mb-4 flex items-center justify-between gap-3 px-1">
                         <h2 class="font-bold text-[#292e29]">{{ $lane->label() }}</h2>
                         <span class="inline-flex min-w-7 items-center justify-center rounded-full border border-[#d7ded2] bg-white px-2 py-1 text-xs font-bold text-[#626a61]">{{ $laneTasks->count() }}</span>
                     </header>
-                    <div class="task-lane-cards space-y-3">
+                    <div class="min-h-36 space-y-3">
                         @forelse($laneTasks as $task)
                             <article
                                 wire:key="board-task-{{ $task->id }}"
                                 data-task-id="{{ $task->id }}"
-                                class="task-card"
+                                class="rounded-2xl border border-[#dde3e7] bg-white p-4 shadow-[0_10px_24px_-20px_rgba(20,28,34,.5)] transition hover:-translate-y-0.5 hover:border-[#b9cbd2] hover:shadow-[0_14px_28px_-20px_rgba(20,28,34,.55)]"
                                 @can('changeStatus', $task)
                                     @unless($boardFiltered)
                                     draggable="true"
@@ -191,7 +195,7 @@ new class extends Component {
                                 </footer>
                             </article>
                         @empty
-                            <div class="task-empty-state rounded-2xl border border-dashed border-[#d7ded2] bg-white/60 px-4 py-8 text-center text-sm text-[#8b9189]">{{ __('No tasks in this column.') }}</div>
+                            <div class="grid min-h-36 place-items-center rounded-2xl border border-dashed border-[#cad5da] bg-white/60 px-4 py-8 text-center text-sm text-[#7b8790]">{{ __('No tasks in this column.') }}</div>
                         @endforelse
                     </div>
                 </div>
